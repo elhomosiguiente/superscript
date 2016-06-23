@@ -66,12 +66,14 @@
     "rimraf": "^2.4.4",
     "roman-numerals": "~0.3.2",
     "safe-eval": "^0.2.0",
-    "sfacts": "^0.2.0",
-    "ss-parser": "^0.5.0",
+    "ss-parser": "git@github.com:rundexter/ss-parser.git",
     "string": "^3.3.1",
-    "syllablistic": "~0.1.0"
+    "syllablistic": "~0.1.0",
+    "wordnet-db": "^3.1.2",
+    "wordnet": "^0.1.2"
   },
   "devDependencies": {
+    "asynctrace": "^1.5.0",
     "blanket": "~1.1.6",
     "bluebird": "^2.9.34",
     "coveralls": "^2.11.9",

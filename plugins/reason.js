@@ -1,30 +1,30 @@
-
 var debug = require("debug")("Reason Plugin");
-var history = require("../lib/history");
+var _history = require("../lib/history");
 var Utils = require("../lib/utils");
 var _ = require("lodash");
 var moment = require("moment");
 var wd = require("../lib/reply/wordnet"); 
+var suggest;
 
 exports.hasName = function(bool, cb) {
   this.user.getVar('name', function(e,name){
-    if (name !== null) {
-      cb(null, (bool == "true") ? true : false)
+    if (!_.isNil(name)) {
+      cb(null, (bool == "true") ? true : false);
     } else {
       // We have no name
-      cb(null, (bool == "false") ? true : false)
+      cb(null, (bool == "false") ? true : false);
     }
   });
-}
+};
 
 exports.has = function(value, cb) {
   this.user.getVar(value, function(e, uvar){
     cb(null, (uvar === undefined) ? false : true);
   });
-}
+};
 
 exports.findLoc = function(cb) {
-  var candidates = history(this.user, { names: true });
+  var candidates = _history(this.user, { names: true });
   if (!_.isEmpty(candidates)) {
     debug("history candidates", candidates);
     var c = candidates[0];
@@ -41,16 +41,16 @@ exports.findLoc = function(cb) {
   } else {
     cb(null, "I'm not sure where you lived.");
   }
-}
+};
 
 exports.tooAdjective = function(cb) {
   // what is/was too small?
   var message = this.message;
-  var candidates = history(this.user, { adjectives: message.adjectives });
+  var candidates = _history(this.user, { adjectives: message.adjectives });
   debug("adj candidates", candidates);
 
-  if (candidates.length != 0 && candidates[0].cNouns.length != 0) {
-    var choice = candidates[0].cNouns.filter(function(item){ return item.length >= 3 });                   
+  if (candidates.length !== 0 && candidates[0].cNouns.length !== 0) {
+    var choice = candidates[0].cNouns.filter(function(item){ return item.length >= 3; });                   
     var too = (message.adverbs.indexOf("too") != -1) ? "too " : "";
     suggest = "The " + choice.pop() + " was " + too + message.adjectives[0] + ".";
     // suggest = "The " + choice.pop() + " was too " + message.adjectives[0] + ".";
@@ -59,7 +59,7 @@ exports.tooAdjective = function(cb) {
   }
 
   cb(null, suggest);  
-}
+};
 
 exports.usedFor = function(cb) {
   var that = this;
@@ -71,7 +71,7 @@ exports.usedFor = function(cb) {
       cb(null,"");
     }
   });
-}
+};
 
 exports.resolveFact = function(cb) {
   // Resolve this
@@ -86,7 +86,7 @@ exports.resolveFact = function(cb) {
       cb(null, "I'm not sure.");
     }
   });
-}
+};
 
 
 exports.putA = function(cb) {
@@ -103,7 +103,7 @@ exports.putA = function(cb) {
       }
     });
   }
-}
+};
 
 exports.isA = function(cb) {
   var that = this;
@@ -128,7 +128,7 @@ exports.isA = function(cb) {
       }
     });
   } else {
-    var thing = "";
+    thing = "";
     // my x is adj => what is adj
     if (that.message.adverbs[0]) {
       thing = that.message.adverbs[0];
@@ -145,7 +145,7 @@ exports.isA = function(cb) {
       }      
     });
   }
-}
+};
 
 exports.colorLookup = function(cb) {
   var that = this;
@@ -160,7 +160,7 @@ exports.colorLookup = function(cb) {
   // TODO: This could be improved adjectives may be empty
   var thing = (things.length == 1) ? things[0] : message.adjectives[0];
 
-  if(thing != "" && message.pnouns.length == 0) {
+  if(thing !== "" && message.pnouns.length === 0) {
 
     // What else is green (AKA Example of green) OR
     // What color is a tree?
@@ -194,7 +194,7 @@ exports.colorLookup = function(cb) {
       }
     });
 
-  } else if (message.pronouns.length != 0){
+  } else if (message.pronouns.length !== 0){
     // Your or My color?
     // TODO: Lookup a saved or cached value.
     
@@ -208,7 +208,7 @@ exports.colorLookup = function(cb) {
         if (!_.isEmpty(list)) {
           var color = list[0].object;
           var lookup = message.nouns[1];
-          var toSay = ["Your " + lookup + " is " + color + "."]
+          var toSay = ["Your " + lookup + " is " + color + "."];
 
           facts.get({object:color,  predicate: 'color'}, function(err, list) {
             if (!_.isEmpty(list)) {
@@ -222,7 +222,7 @@ exports.colorLookup = function(cb) {
           // my fav color - we need 
           var pred = message.entities[0];
           userfacts.get({subject: thing,  predicate: pred }, function(err, list) {
-            debug("!!!!", list)
+            debug("!!!!", list);
             if (!_.isEmpty(list)) {
               var color = list[0].object;
               cb(null,"Your " + thing + " " + pred + " is " + color + ".");
@@ -242,7 +242,7 @@ exports.colorLookup = function(cb) {
           var toc = thingOfColor.object.replace(/_/g, " ");
           cb(null, "My " + thing + " color is " + toc + ".");
         } else {
-          debug("---", {subject:thing, predicate: 'color'})
+          debug("---", {subject:thing, predicate: 'color'});
           // Do I make something up or just continue?
           cb(null, "");
         }
@@ -252,7 +252,7 @@ exports.colorLookup = function(cb) {
     suggest = "It is blue-green in color.";
     cb(null, suggest);
   }
-}
+};
 
 exports.makeChoice = function(cb) {
   var that = this;
@@ -274,29 +274,29 @@ exports.makeChoice = function(cb) {
     }
     
   } else {
-    cb(null,"")
+    cb(null,"");
   }
-}
+};
 
 exports.findMoney = function(cb) {
 
-  var candidates = history(this.user, { nouns: this.message.nouns, money: true });
-  if (candidates.length != 0) {
+  var candidates = _history(this.user, { nouns: this.message.nouns, money: true });
+  if (candidates.length !== 0) {
     cb(null, "It would cost $" + candidates[0].numbers[0] + ".");
   } else {
     cb(null, "Not sure.");
   }
-}
+};
 
 exports.findDate = function(cb){
- var candidates = history(this.user, { date: true });
- if (candidates.length != 0) {
-  debug("DATE", candidates[0])
+ var candidates = _history(this.user, { date: true });
+ if (candidates.length !== 0) {
+  debug("DATE", candidates[0]);
    cb(null, "It is in " + moment(candidates[0].date).format("MMMM") + ".");
  } else {
    cb(null, "Not sure.");
  } 
-}
+};
 
 exports.locatedAt = function(cb) {
   debug("LocatedAt");
@@ -310,7 +310,7 @@ exports.locatedAt = function(cb) {
     cb = args[0];
     // Pull the place from the history
     var reply = this.user.getLastReply();
-    if (reply && reply.nouns.length != 0);
+    if (reply && reply.nouns.length !== 0);
     place = reply.nouns.pop();
   }
    
@@ -324,7 +324,7 @@ exports.locatedAt = function(cb) {
     }
     
   });
-}
+};
 
 exports.aquireGoods = function(cb) {
   // Do you own a <thing>
@@ -336,7 +336,7 @@ exports.aquireGoods = function(cb) {
   var reason = "";
 
   botfacts.get({subject:thing, predicate: 'ownedby', object: 'bot'}, function(err, list) {
-    debug("!!!", list)
+    debug("!!!", list);
     if (!_.isEmpty(list)){
       // Lets find out more about it.
 
@@ -355,7 +355,7 @@ exports.aquireGoods = function(cb) {
         } else {
           cb(null, "NO");    
         }
-      })
+      });
     }    
   });
-}
+};

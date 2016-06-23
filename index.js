@@ -7,7 +7,6 @@ var _ = require("lodash");
 var norm = require("node-normalizer");
 var requireDir = require("require-dir");
 var debug = require("debug-levels")("SS:Script");
-var facts = require("sfacts");
 var gTopicsSystem = require("./lib/topics/index");
 var Message = require("./lib/message");
 var Users = require("./lib/users");
@@ -15,6 +14,7 @@ var getreply = require("./lib/getreply");
 var Utils = require("./lib/utils");
 var processHelpers = require("./lib/reply/common");
 var mergex = require("deepmerge");
+var storage = require('./lib/storage');
 
 function SuperScript(options, callback) {
   EventEmitter.call(this);
@@ -39,19 +39,17 @@ function SuperScript(options, callback) {
   this.loadPlugins(process.cwd() + "/plugins");
   // this.intervalId = setInterval(this.check.bind(this), 500);
 
-  this.factSystem = options.factSystem ? options.factSystem : facts.create("systemDB");
   this.topicSystem = gTopicsSystem(mongoose, this.factSystem);
 
   // This is a kill switch for filterBySeen which is useless in the editor.
   this.editMode = options.editMode || false;
 
   // We want a place to store bot related data
-  this.memory = options.botfacts ? options.botfacts : this.factSystem.createUserDB("botfacts");
+  this.memory = storage.create('botstorage');
 
   this.scope = {};
   this.scope = _.extend(options.scope || {});
   this.scope.bot = this;
-  this.scope.facts = this.factSystem;
   this.scope.topicSystem = this.topicSystem;
   this.scope.botfacts = this.memory;
   this.users = new Users(mongoose, this.factSystem);
@@ -88,7 +86,6 @@ var messageItorHandle = function (user, system) {
         var messageOptions = {
           qtypes: system.question,
           norm: system.normalize,
-          facts: system.facts
         };
 
         if (replyObj) {
@@ -147,12 +144,11 @@ var messageFactory = function (options, cb) {
   var messageOptions = {
     qtypes: options.question,
     norm: normalize,
-    facts: options.factSystem,
     original: rawMsg
   };
 
   return new Message(cleanMsg, messageOptions, function (tmsg) {
-    var mset = _.isEmpty(tmsg) ? [] : [tmsg]
+    var mset = _.isEmpty(tmsg) ? [] : [tmsg];
     return cb(null, mset);
   });
 };
@@ -164,7 +160,6 @@ SuperScript.prototype.message = function (msgString, callback) {
   var messageOptions = {
     qtypes: this.question,
     norm: this.normalize,
-    facts: this.factSystem
   };
 
   var message = new Message(msgString, messageOptions, function (msgObj) {
@@ -223,7 +218,6 @@ SuperScript.prototype._reply = function(options, callback) {
     // Message
     question: self.question,
     normalize: self.normalize,
-    facts: self.factSystem,
     editMode: self.editMode
   };
 
@@ -253,7 +247,8 @@ SuperScript.prototype._reply = function(options, callback) {
         }
 
         var reply = {};
-        var messageArray = Utils.cleanArray(messageArray);
+
+        messageArray = Utils.cleanArray(messageArray);
 
         if (_.isEmpty(messageArray)) {
           reply.string = "";
@@ -268,7 +263,7 @@ SuperScript.prototype._reply = function(options, callback) {
       });
     });
   });
-}
+};
 
 
 SuperScript.prototype.loadPlugins = function (path) {
