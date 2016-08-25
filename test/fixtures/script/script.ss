@@ -150,6 +150,15 @@
   ^ ^one()\n\n
   ^ more
 
+  + custom 10 function
+  - ^countParams("quotes are treated as a unit", "second param", "third", "fourth parameter")
+
+  + custom 11 function
+  - ^countParams("a param! with some, special chars'?;:.@#$%^&*()/\|", "second")
+
+  + custom 12 function
+  - ^countParams(special chars without quotes, should still fail!)
+
   // We pull in wordnet and system facts
   + I ~like shoe
   - Wordnet test one

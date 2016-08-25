@@ -82,3 +82,10 @@ exports.getUserId = function(cb) {
   });
 }
 
+exports.countParams = function () {
+  var quotes = _.initial(arguments);
+  var cb = _.last(arguments);
+
+  cb(null, "I found " + _.size(quotes) + " parameters");
+}
+
